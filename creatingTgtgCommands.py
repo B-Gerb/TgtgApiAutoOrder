@@ -3,7 +3,15 @@ import sys
 import os
 from datetime import datetime
 import time
+import tgtgClass
+"""
+FOR USE IN HOME TERMINAL
+CODE WILL CREATE TOKENS.TXT FILE TO STORE CREDENTIALS
+WILL TAKE USER INPUT TO EITHER 
+1. ORDER FROM STORE
+2. GET NOTIFCIATIONS FROM A STORE
 
+"""
 class tgtgTesting:
 
     def __init__(self):
@@ -33,7 +41,7 @@ class tgtgTesting:
         return client
 
 
-    def orderItem(self, item):
+    def orderAnItem(self, item):
         print(f"Attempting to order from store {item['store']['store_name']}")
         print("Starting ordering process")
         failing = True
@@ -48,14 +56,20 @@ class tgtgTesting:
                 print("Failed to order")
             time.sleep(3)
         print(order)
-#If you want to start the client with a new email, use the startUp function
-
-def main():
-    lines =  sys.stdin.readlines()
-    for line in lines:
-        print(line)
-if __name__ == "__main__":
-    main()
 
 
-
+    def createNotification(self, item):
+        print(f"Attempting to order from store {item['store']['store_name']}")
+        print("Starting ordering process")
+        failing = True
+        while failing:
+            try:    
+                order = self.client.create_order(item['item']['item_id'], 1)
+                print(order)
+                print("order created")
+                failing = False
+                return order
+            except:
+                print("Failed to order")
+            time.sleep(3)
+        print(order)
