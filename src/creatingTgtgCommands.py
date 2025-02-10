@@ -29,7 +29,6 @@ class tgtgCommands:
         credentials = client.get_credentials()
         if os.path.exists("tokens.txt"):
             os.remove("tokens.txt")
-        
         writing = open("tokens.txt", "w")
         writing.write(credentials['access_token'] + "\n")
         writing.write(credentials['refresh_token'] + "\n")
@@ -38,6 +37,7 @@ class tgtgCommands:
         self.client = client
         return self.createClient()
 
+    #creates the client
     def createClient(self):
         reading = open("tokens.txt", "r")
         access_token = reading.readline().strip()
@@ -54,8 +54,8 @@ class tgtgCommands:
         self.client = client
         return client
 
-
-    def creatingNotfication(self):
+    #notify if a store is avaliable has option to order
+    def creatingNotfication(self, orderOrNot=False):
         writing = open("commands.txt", "a")
         items = self.client.get_items()
         possibleOrders = {}
@@ -68,7 +68,49 @@ class tgtgCommands:
         print("_"*50)
         print("Type *all* to see all possible options or q to quit")
         while True:
-            userChoice = input("Which option would you like to be notified about?")
+            userChoice = input("Which option would you like to be notified about" + (" and ordered?" if orderOrNot else "?"))
+
+            if userChoice == 'q':
+                return
+            elif userChoice == "all":
+                for item in possibleOrders:
+                    print(f"Option {item}: At store {possibleOrders[item]['store']['store_name']}")
+                print("_"*50)
+            elif userChoice.isdigit():
+                if int(userChoice) not in possibleOrders:
+                    print("Invalid option")
+                    continue
+                else:
+                    print(f"Store choosen is {possibleOrders[int(userChoice)]['store']['store_name']}")
+                    if input("To Confirm this store type y, to cancel type anything else:") != 'y':
+                        continue
+                    print("Will notify you when the item is avaliable")
+                    while True:
+                        choice = input("Will check availability for how long in hours?")
+                        if not choice.isdigit() or int(choice) < 0:
+                            print("Invalid time")
+                            continue
+                        else:
+                            duration = int(choice)
+                            writing.write("item_id:" + possibleOrders[int(userChoice)]['item']['item_id'] + "\n")
+                            writing.write("duration:" + str(duration) + "\n")
+                            writing.write("type:" + ("forceOrder" if orderOrNot else "notify") + "\n")
+                            return
+
+    def forceOrder(self):
+        writing = open("commands.txt", "a")
+        items = self.client.get_items()
+        possibleOrders = {}
+        currOrder = 1
+        for item in items:
+            item = self.client.get_item(item['item']['item_id'])
+            possibleOrders[currOrder] = item
+            print(f"Option {currOrder}: {item['store']['store_name']}")
+            currOrder += 1
+        print("_"*50)
+        print("Type *all* to see all possible options or q to quit")
+        while True:
+            userChoice = input("Which option would you like to be order?")
             if userChoice == 'q':
                 return
             elif userChoice == "all":
@@ -95,11 +137,11 @@ class tgtgCommands:
                             writing.write("duration:" + str(duration) + "\n")
                             writing.write("type:notify\n")
                             return
-                    
 
 
 
 
+    #order an item with a pickup window and next sale interval
     def orderAnItem(self):
         writing = open("commands.txt", "a")
         items = self.client.get_items()
@@ -165,7 +207,7 @@ class tgtgCommands:
 
 
 
-def creatingCommands():
+def creatingCommands(notification=False, order=False, forceOrder=False):
     #this will create commands from the user to be executed possible command string
     """
     skip 
@@ -174,8 +216,15 @@ def creatingCommands():
     """
     setUp = tgtgCommands()
     client = setUp.startUp(input("Enter your email or type skip of tokens.txt already contains keys: ")) 
-    #orderAnItem = setUp.orderAnItem()
-    setUp.creatingNotfication()
+
+    if order:
+        setUp.orderAnItem()
+    if notification:
+        setUp.creatingNotfication()
+    if forceOrder:
+        setUp.forceOrder()
+
+
     
-creatingCommands()
+   
     

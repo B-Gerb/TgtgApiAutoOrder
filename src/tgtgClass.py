@@ -35,23 +35,36 @@ class tgtgTesting:
         duration +=3
         firstSpeed = 600
         while firstSpeed > 0:
-            try:    
-                order = self.client.create_order(item['item']['item_id'], 1)
+            order = attemptToOrder(item['item']['item_id'], amt)
+            if order != "Failed to order":
                 notifyUser("order", order, message= "successful order")
                 return
-            except:
+            else:
                 time.sleep(1)
                 firstSpeed -= 1
         secondSpeed = (duration*60) - 600
         while secondSpeed > 0:
-            try:    
-                order = self.client.create_order(item['item']['item_id'], 1)
+            order = attemptToOrder(item['item']['item_id'], amt)
+            if order != "Failed to order":
                 notifyUser("order", order, message= "successful order")
                 return
-            except:
+            else:
                 time.sleep(10)
                 secondSpeed -= 1
         notifyUser("order", message= "Failed to order")
+
+
+    #force order an item even if it does not have any avaliable pickup window
+    def forceOrder(self, item_id, duration):
+        time = duration*3600
+        while time > 0:
+            order = self.client.create_order(item_id, amt)
+            if order != "Failed to order":
+                notifyUser("forceorder", order, message= "Force order placed")
+                return
+            else:
+                time.sleep(10)
+                time -= 10
          
 
 
@@ -65,15 +78,16 @@ class tgtgTesting:
             return True
         else:
             return False
-    def attemptToOrder(self, item_id):
+    
+    def attemptToOrder(self, item_id, amt):
         try:
-            order = self.client.create_order(item_id, 1)
+            order = self.client.create_order(item_id, amt)
             return order
         except:
             return "Failed to order"
 
     def notifyWhenAvaliable(self, item_id, duration):
-        duration = duration*60
+        duration = duration*3600
 
         while duration > 0:
             item = client.get_item(item_id)
@@ -96,6 +110,8 @@ class tgtgTesting:
             print('place holder for order')
         elif type == "notify":
             print('place holder for avaiable')
+        elif type == "forceorder":
+            print('place holder for force order')
         elif type == "connection":
             print('place holder for connection')
         elif type == "abort":
@@ -135,6 +151,9 @@ def main():
             commands.orderAnItem(parts[0], parts[1])
             parts = []
         elif proccess == "notify":
+            commands.notifyWhenAvaliable(parts[0], parts[1])
+            parts = []
+        elif proccess == "forceorder":
             commands.notifyWhenAvaliable(parts[0], parts[1])
             parts = []
         else:
