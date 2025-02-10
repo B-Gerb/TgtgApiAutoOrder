@@ -35,6 +35,7 @@ class tgtgCommands:
         writing.write(credentials['refresh_token'] + "\n")
         writing.write(credentials['cookie'] + "\n")
         writing.close()
+        self.client = client
         return self.createClient()
 
     def createClient(self):
@@ -47,33 +48,40 @@ class tgtgCommands:
         writing.write(f"access_token: {access_token}\n")
         writing.write(f"refresh_token: {refresh_token}\n")
         writing.write(f"cookie: {cookie}\n")
-        writing.write("connection\n")
+        writing.write("type:connection\n")
         writing.close()
         client = TgtgClient(access_token=access_token, refresh_token=refresh_token, cookie=cookie)
+        self.client = client
         return client
 
 
     def creatingNotfication(self):
         writing = open("commands.txt", "a")
-        items = client.get_items()
+        items = self.client.get_items()
         possibleOrders = {}
         currOrder = 1
         for item in items:
-            item = client.get_item(item['item']['item_id'])
+            item = self.client.get_item(item['item']['item_id'])
             possibleOrders[currOrder] = item
-            print(f"Option {currOrder}: {item['store']['name_name']}")
+            print(f"Option {currOrder}: {item['store']['store_name']}")
             currOrder += 1
         print("_"*50)
         print("Type *all* to see all possible options or q to quit")
         while True:
             userChoice = input("Which option would you like to be notified about?")
-            if userChoice.isdigit():
+            if userChoice == 'q':
+                return
+            elif userChoice == "all":
+                for item in possibleOrders:
+                    print(f"Option {item}: At store {possibleOrders[item]['store']['store_name']}")
+                print("_"*50)
+            elif userChoice.isdigit():
                 if int(userChoice) not in possibleOrders:
                     print("Invalid option")
                     continue
                 else:
                     print(f"Store choosen is {possibleOrders[int(userChoice)]['store']['store_name']}")
-                    if input("To Confirm this store type y, to cancel type anything else") != 'y':
+                    if input("To Confirm this store type y, to cancel type anything else:") != 'y':
                         continue
                     print("Will notify you when the item is avaliable")
                     while True:
@@ -83,28 +91,30 @@ class tgtgCommands:
                             continue
                         else:
                             duration = int(choice)
-                            break
-                    writing.write("item_id:" + possibleOrders[int(userChoice)]['item']['item_id'] + "\n")
-                    writing.write("duration:" + str(duration) + "\n")
-                    writing.write("type:notify\n")
+                            writing.write("item_id:" + possibleOrders[int(userChoice)]['item']['item_id'] + "\n")
+                            writing.write("duration:" + str(duration) + "\n")
+                            writing.write("type:notify\n")
+                            return
+                    
 
 
 
 
-    def orderAnItem(self, item):
+    def orderAnItem(self):
         writing = open("commands.txt", "a")
-        items = client.get_items()
+        items = self.client.get_items()
         possibleOrders = {}
         currOrder = 1
         for item in items:
-            item = client.get_item(item['item']['item_id'])
+            item = self.client.get_item(item['item']['item_id'])
+            #print(item)
             if 'pickup_interval' not in item or 'next_sales_window_purchase_start' not in item:
                 continue 
             print(item['store']['store_name'])
             startInt = datetime.strptime(item['pickup_interval']['start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
             endInt = datetime.strptime(item['pickup_interval']['end'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
             salesWindow = datetime.strptime(item['next_sales_window_purchase_start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
-            print(f"Option {currOrder}: At store {item['store']['store_name']} \n" +
+            print(f"Option {currOrder} at store: {item['store']['store_name']} \n" +
                 f"Start time: {startInt}, end time: {endInt} ")
             print(f"Next Sales window is at: {salesWindow}")
             possibleOrders[currOrder] = item
@@ -121,17 +131,19 @@ class tgtgCommands:
                 elif order == "all":
                     for item in possibleOrders:
                         print(f"Option {item}: At store {possibleOrders[item]['store']['store_name']}")
+                    print("_"*50)
+
                 elif order == 'q':
-                    break
+                    return
                 else:
                     print("Invalid option")
                     continue
             else:
+                order = int(order)
+                order = possibleOrders[order]
                 print(f"Ordering from store {order['store']['store_name']}")
                 if input("To Confirm this store type y, to cancel type anything else") != 'y':
                     continue
-                order = int(order)
-                order = possibleOrders[order]
                 print("How long would you like to attempt the order?")
                 print("Duration will be after the next sales window")
                 while (time := input("Duration in minutes: ")):
@@ -144,7 +156,7 @@ class tgtgCommands:
                         continue
                     break
             break
-        writing.wrote("item_id:" + order['item']['item_id'] + "\n")
+        writing.write("item_id:" + order['item']['item_id'] + "\n")
         writing.write("duration:" + str(time) + "\n")
         writing.write("type:order\n")
         writing.close()
@@ -160,6 +172,10 @@ def creatingCommands():
     order xyz 3 hours starting at 3:00 5 second intervals notfication system waitTime if confirmed
 
     """
-    setUp = tgtgTesting()
+    setUp = tgtgCommands()
     client = setUp.startUp(input("Enter your email or type skip of tokens.txt already contains keys: ")) 
+    #orderAnItem = setUp.orderAnItem()
+    setUp.creatingNotfication()
+    
+creatingCommands()
     

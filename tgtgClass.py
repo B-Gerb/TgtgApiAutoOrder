@@ -59,6 +59,19 @@ class tgtgTesting:
     item_id: the id of the item you want to be notified about
     duration: the time in minutes you want to be notified for in minutes
     """
+    def checkAvaliable(self, item_id):
+        item = client.get_item(item_id)
+        if item['items_available'] > 0:
+            return True
+        else:
+            return False
+    def attemptToOrder(self, item_id):
+        try:
+            order = self.client.create_order(item_id, 1)
+            return order
+        except:
+            return "Failed to order"
+
     def notifyWhenAvaliable(self, item_id, duration):
         duration = duration*60
 
@@ -91,6 +104,7 @@ class tgtgTesting:
             return "Invalid type"
 
     def abortOrder(self, order_id):
+        time.sleep(3)
         client.abort_order(order_id)
         notifyUser("abort", message= "Order aborted")
 
@@ -104,8 +118,29 @@ connection
 
 """
 def main():
+    commands = tgtgTesting()
     lines =  sys.stdin.readlines()
+    parts = [] 
     for line in lines:
+        line = line.strip()
+        proccess = line.split(":")[1]
+        if proccess == "connection":
+            commands.createClient(parts[0], parts[1], parts[2])
+            parts = []
+            print("ping api")
+        elif proccess == "abort":
+            commands.abortOrder(parts[0])
+            parts = []
+        elif proccess == "order":
+            commands.orderAnItem(parts[0], parts[1])
+            parts = []
+        elif proccess == "notify":
+            commands.notifyWhenAvaliable(parts[0], parts[1])
+            parts = []
+        else:
+            parts.append(proccess)
+            
+
         print(line)
 
 
