@@ -2,3 +2,6 @@
 tokens.txt
 #Key to connect to aws
 KeyForTesting.pem
+
+#testing the command creation
+commands.txt
