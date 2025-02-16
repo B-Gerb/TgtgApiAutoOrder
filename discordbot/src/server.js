@@ -1,0 +1,171 @@
+import { AutoRouter } from 'itty-router';
+import {
+  InteractionResponseType,
+  InteractionType,
+  verifyKey,
+} from 'discord-interactions';
+import { AWW_COMMAND, INVITE_COMMAND } from './commands.js';
+import { InteractionResponseFlags } from 'discord-interactions';
+
+class JsonResponse extends Response {
+  constructor(body, init) {
+    const jsonBody = JSON.stringify(body);
+    init = init || {
+      headers: {
+        'content-type': 'application/json;charset=UTF-8',
+      },
+    };
+    super(jsonBody, init);
+  }
+}
+
+async function sendDiscordMessage(channelForDisc, message, botToken) {
+    console.log(channelForDisc)
+  if (!channelForDisc || !message || !botToken) {    
+    throw new Error('Missing required parameters for sending Discord message');
+  }
+
+  const url = `https://discord.com/api/v10/channels/${channelForDisc}/messages`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bot ${botToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content: message })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Discord API error: ${response.status} ${response.statusText} ${errorData ? JSON.stringify(errorData) : ''}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error sending Discord message:', error);
+    throw error;
+  }
+}
+
+const router = AutoRouter();
+
+router.post('/notification', async (request, env) => {
+
+  try {
+    const data = await request.json();
+
+    if (!data.channelToSend || !data.type) {
+      return new JsonResponse({
+        success: false,
+        message: 'Missing required fields: channelId and type are required'
+      }, { status: 400 });
+    }
+
+    const channelForDisc = data.channelToSend;
+    const { type } = data;
+
+    switch (type) {
+      case 'order': {
+        if (!data.name || !data.start) {
+          return new JsonResponse({
+            success: false,
+            message: 'Missing required fields for order: name and start are required'
+          }, { status: 400 });
+        }
+
+        await sendDiscordMessage(
+            channelForDisc,
+          `New order for ${data.name} starting at ${data.start}`,
+          env.DISCORD_TOKEN
+        );
+        return new JsonResponse({
+          success: true,
+          message: 'Notification sent to Discord'
+        });
+      }
+      case 'testing': {
+        await sendDiscordMessage(channelForDisc, "TEST", env.DISCORD_TOKEN);
+        return new JsonResponse({
+          success: true,
+          message: 'Test notification sent to Discord'
+        });
+      }
+      default: {
+        return new JsonResponse({
+          success: false,
+          message: `Invalid notification type: ${type}`
+        }, { status: 400 });
+      }
+    }
+  } catch (error) {
+    console.error('Error processing notification:', error);
+    return new JsonResponse({
+      success: false,
+      message: error.message
+    }, { status: 500 });
+  }
+});
+
+router.get('/', (request, env) => {
+  return new Response(`👋 ${env.DISCORD_APPLICATION_ID}`);
+});
+
+router.post('/', async (request, env) => {
+
+  const { isValid, interaction } = await server.verifyDiscordRequest(
+    request,
+    env,
+  );
+  if (!isValid || !interaction) {
+    return new Response('Bad request signature.', { status: 401 });
+  }
+
+  if (interaction.type === InteractionType.PING) {
+    return new JsonResponse({
+      type: InteractionResponseType.PONG,
+    });
+  }
+
+  if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+    switch (interaction.data.name.toLowerCase()) {
+      default:
+        return new JsonResponse({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: 'not implemeneted',
+            flags: InteractionResponseFlags.EPHEMERAL,
+          },
+        });
+    }
+  }
+
+  console.error('Unknown Type');
+  return new JsonResponse({ error: 'Unknown Type' }, { status: 400 });
+});
+
+// Catch-all route (should be defined LAST)
+router.all('*', () => new Response('Not Found.', { status: 404 }));
+
+async function verifyDiscordRequest(request, env) {
+  const signature = request.headers.get('x-signature-ed25519');
+  const timestamp = request.headers.get('x-signature-timestamp');
+  const body = await request.text();
+  const isValidRequest =
+    signature &&
+    timestamp &&
+    (await verifyKey(body, signature, timestamp, env.DISCORD_PUBLIC_KEY));
+  if (!isValidRequest) {
+    return { isValid: false };
+  }
+
+  return { interaction: JSON.parse(body), isValid: true };
+}
+
+const server = {
+  verifyDiscordRequest,
+  fetch: router.fetch,
+};
+
+export default server;
