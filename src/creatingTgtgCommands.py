@@ -39,15 +39,23 @@ class tgtgCommands:
 
     #creates the client
     def createClient(self):
-        reading = open("tokens.txt", "r")
+        if not os.path.exists("tokens.txt"):
+            if os.path.exists("src/tokens.txt"):
+                reading = open("src/tokens.txt", "r")
+            else:
+                print("No tokens.txt file found")
+                return
+        else:
+            reading = open("tokens.txt", "r")
         access_token = reading.readline().strip()
         refresh_token = reading.readline().strip()
         cookie = reading.readline().strip()
         reading.close()
         writing = open("commands.txt", "w")
-        writing.write(f"access_token: {access_token}\n")
-        writing.write(f"refresh_token: {refresh_token}\n")
-        writing.write(f"cookie: {cookie}\n")
+        writing.write(f"channelID:{1338537091142778924}\n")
+        writing.write(f"access_token:{access_token}\n")
+        writing.write(f"refresh_token:{refresh_token}\n")
+        writing.write(f"cookie:{cookie}\n")
         writing.write("type:connection\n")
         writing.close()
         client = TgtgClient(access_token=access_token, refresh_token=refresh_token, cookie=cookie)
@@ -57,7 +65,7 @@ class tgtgCommands:
     #notify if a store is avaliable has option to order
     def creatingNotfication(self, orderOrNot=False):
         writing = open("commands.txt", "a")
-        items = self.client.get_items()
+        items = self.client.get_favorites()
         possibleOrders = {}
         currOrder = 1
         for item in items:
@@ -87,7 +95,7 @@ class tgtgCommands:
                     print("Will notify you when the item is avaliable")
                     while True:
                         choice = input("Will check availability for how long in hours?")
-                        if not choice.isdigit() or int(choice) < 0:
+                        if not choice.isdigqit() or int(choice) < 0:
                             print("Invalid time")
                             continue
                         else:
@@ -99,7 +107,7 @@ class tgtgCommands:
 
     def forceOrder(self):
         writing = open("commands.txt", "a")
-        items = self.client.get_items()
+        items = self.client.get_favorites()
         possibleOrders = {}
         currOrder = 1
         for item in items:
@@ -144,15 +152,13 @@ class tgtgCommands:
     #order an item with a pickup window and next sale interval
     def orderAnItem(self):
         writing = open("commands.txt", "a")
-        items = self.client.get_items()
+        items = self.client.get_favorites()
         possibleOrders = {}
         currOrder = 1
         for item in items:
             item = self.client.get_item(item['item']['item_id'])
-            #print(item)
             if 'pickup_interval' not in item or 'next_sales_window_purchase_start' not in item:
                 continue 
-            print(item['store']['store_name'])
             startInt = datetime.strptime(item['pickup_interval']['start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
             endInt = datetime.strptime(item['pickup_interval']['end'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
             salesWindow = datetime.strptime(item['next_sales_window_purchase_start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
@@ -171,8 +177,8 @@ class tgtgCommands:
                     print("Invalid option")
                     continue
                 elif order == "all":
-                    for item in possibleOrders:
-                        print(f"Option {item}: At store {possibleOrders[item]['store']['store_name']}")
+                    for position in possibleOrders:
+                        print(f"Option {position}: At store {possibleOrders[position]['store']['store_name']}")
                     print("_"*50)
 
                 elif order == 'q':
@@ -225,6 +231,7 @@ def creatingCommands(notification=False, order=False, forceOrder=False):
         setUp.forceOrder()
 
 
-    
-   
+if __name__ == "__main__":
+    creatingCommands(order=True)
+
     

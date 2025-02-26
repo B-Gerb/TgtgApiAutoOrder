@@ -1,7 +1,7 @@
 from tgtg import TgtgClient
 import sys
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import time
 import requests
 
@@ -9,29 +9,68 @@ import requests
 class tgtgTesting:
     def __init__(self):
         self.client = None
+        self.channelID = None
+        self.url ="https://tgtgggbot.high5brian.workers.dev/notification"
 
+    
+    def setChannelId(self, channelID):
+        self.channelID = channelID
+
+    """
+    type: message to send to discord
+    """
+    def notifyUser(self, message):
+        data = {
+            "message": message,
+            "channelToSend": self.channelID
+        }
+        process = requests.post(self.url, json=data)
+        return process
+    # Check if an item is available one time
+    def checkAvailable(self, item_id):
+        item = self.client.get_item(item_id)
+        return item['items_available'] > 0
+
+    # Attempt to order an item
+    def attemptToOrder(self, item_id, amt):
+        try:
+            order = self.client.create_order(item_id, amt)
+            return order
+        except:
+            return "Failed to order"
+    
     # Creates the client
     def createClient(self, access_token, refresh_token, cookie):
         self.client = TgtgClient(access_token=access_token, refresh_token=refresh_token, cookie=cookie)
-        self.notifyUser(type="connection", message="Connection established")
+        self.notifyUser("Connection established")
+
+    
 
     """
     Returns the order object if successful, otherwise returns "Failed to order"
     item: the item object
     duration: the time in minutes you want to wait to order the item after the next sales window
     """
-    def orderAnItem(self, item, duration):
-        time = item['next_sales_window_purchase_start']
-        target_date = datetime.fromisoformat(time).replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
+    def orderAnItem(self, item_id, duration):
+
+        item = self.client.get_item(item_id)
+        name = item['store']['store_name']
+        targetTime = item['next_sales_window_purchase_start']
+
+        target_date = datetime.fromisoformat(targetTime).replace(tzinfo=timezone.utc) - timedelta(hours=5)
+
+
+        now = datetime.now(timezone.utc) - timedelta(hours=5)
+
         time_to_wait = (target_date - now).total_seconds()
+        time_to_wait = float(time_to_wait)
         time.sleep(time_to_wait - 3)
         duration += 3
         firstSpeed = 600
         while firstSpeed > 0:
-            order = self.attemptToOrder(item['item']['item_id'], 1)  # Assuming amt=1
+            order = self.attemptToOrder(item_id, 1)  # Assuming amt=1
             if order != "Failed to order":
-                self.notifyUser("order", order, message="Successful order")
+                self.notifyUser("Successful order of " + name)
                 return
             else:
                 time.sleep(1)
@@ -40,96 +79,70 @@ class tgtgTesting:
         while secondSpeed > 0:
             order = self.attemptToOrder(item['item']['item_id'], 1)  # Assuming amt=1
             if order != "Failed to order":
-                self.notifyUser("order", order, message="Successful order")
+                self.notifyUser("Successful order of " + name)
                 return
             else:
                 time.sleep(10)
                 secondSpeed -= 10
-        self.notifyUser("order", message="Failed to order")
+        self.notifyUser("Failed to order " + name)
 
     # Force order an item even if it does not have any available pickup window
     def forceOrder(self, item_id, duration, amt=1):  # Assuming amt=1
+        item = self.client.get_item(item_id)
+        name = item['item']['display_name']
         time = duration * 3600
         while time > 0:
             order = self.attemptToOrder(item_id, amt)
             if order != "Failed to order":
-                self.notifyUser("forceorder", order, message="Force order placed")
+                self.notifyUser("Successful order of " + name)
                 return
             else:
                 time.sleep(10)
                 time -= 10
+        self.notifyUser("Failed to order " + name)
+
+
+    
+
 
     """
-    item_id: the id of the item you want to be notified about
+    item_id: listOfItems
     duration: the time in minutes you want to be notified for in minutes
     """
-    def checkAvailable(self, item_id):
-        item = self.client.get_item(item_id)
-        return item['items_available'] > 0
-
-    def attemptToOrder(self, item_id, amt):
-        try:
-            order = self.client.create_order(item_id, amt)
-            return order
-        except:
-            return "Failed to order"
-
-    def notifyWhenAvailable(self, item_id, duration):
+    def notifyWhenAvailable(self, listOfItems, duration):
         duration = duration * 3600
         while duration > 0:
-            item = self.client.get_item(item_id)
-            if item['items_available'] > 0:
-                self.notifyUser("notify", item, "Item is available")
-                return
+            for item_id in listOfItems:
+                if self.checkAvailable(item_id):
+                    self.notifyUser(f"Item at store: {item['display_name']} is available")
+                    listOfItems.remove(item_id)
+                    if len(listOfItems) == 0:
+                        return
             time.sleep(10)
             duration -= 10
-        self.notifyUser("notify", message="Never became available")
+        names = ""
+        for item_id in listOfItems:
+            item = self.client.get_item(item_id)
+            names += item['display_name'] + ", "
+        names = names[:-2]
 
-    """
-    type: the type of notification, either order or notify
-    """
-    def notifyUser(self, type, item=None, message=None, channelID=None):
-        url = "https://tgtgggbot.high5brian.workers.dev/notification"
-        if type == "order":
-            if item is None:
-                #For testing
-                data = {
-                    "type": "order",
-                    "name": "Test",
-                    "start": "now",
-                    "channelToSend": channelID
-                }
-            else:
-                data = {
-                    "type": "order",
-                    "name": item['display_name'],  # Example field, adjust as needed
-                    "start": item['pickup_interval']['start'].replace(tzinfo=timezone.utc).isoformat(),
-                    "channelToSend": channelID
-                }
-            print("here")
-            process = requests.post(url, json=data)
-            print(process)
-        elif type == "notify":
-            print('Placeholder for available')
-        elif type == "forceorder":
-            print('Placeholder for force order')
-        elif type == "connection":
-            print('Placeholder for connection')
-        elif type == "abort":
-            print('Placeholder for abort')
-        else:
-            return "Invalid type"
-
+        self.notifyUser(f"The following store(s) never became became available:{names}")
+        
+    # Aborts an order
     def abortOrder(self, order_id):
         time.sleep(3)
         self.client.abort_order(order_id)
-        self.notifyUser("abort", message="Order aborted")
+        self.notifyUser(f"Order for {order_id} has been aborted")
 
 
 # Main function to handle command-line input
 def main():
     commands = tgtgTesting()
     lines = sys.stdin.readlines()
+    channelID = lines[0].strip()
+    channelID = channelID.split(":")[1]
+    commands.setChannelId(channelID)
+    lines = lines[1:]
     parts = []
     for line in lines:
         line = line.strip()
@@ -137,19 +150,28 @@ def main():
         if process == "connection":
             commands.createClient(parts[0], parts[1], parts[2])
             parts = []
-            print("Ping API")
+            time.sleep(1)
         elif process == "abort":
             commands.abortOrder(parts[0])
             parts = []
+            time.sleep(1)
+
         elif process == "order":
             commands.orderAnItem(parts[0], parts[1])
             parts = []
+            time.sleep(1)
+
         elif process == "notify":
-            commands.notifyWhenAvailable(parts[0], parts[1])
+            stores = parts[0].split(",")
+            commands.notifyWhenAvailable(stores, parts[1])
             parts = []
+            time.sleep(1)
+
         elif process == "forceorder":
             commands.forceOrder(parts[0], parts[1])
             parts = []
+            time.sleep(1)
+
         else:
             parts.append(process)
 
