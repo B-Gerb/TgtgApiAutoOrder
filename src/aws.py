@@ -57,8 +57,21 @@ def ssh_to_ec2(key_path, hostname, username="ubuntu"):
         ssh.exec_command("rm -rf tgtgClass.py")
         ssh.exec_command("rm -rf commands.txt")
         ssh.exec_command("rm -rf myenv")
-        scp.put("tgtgClass.py")
-        scp.put("commands.txt")
+        if os.path.exists("tgtgClass.py"):
+            scp.put("tgtgClass.py")
+        elif os.path.exists("src/tgtgClass.py"):
+            scp.put("src/tgtgClass.py")
+        else:
+            print("tgtgClass.py not found")
+            sys.exit(1)
+        if os.path.exists("commands.txt"):
+            scp.put("commands.txt")
+        elif os.path.exists("src/commands.txt"):
+            scp.put("src/commands.txt")
+        else:
+            print("commands.txt not found")
+            sys.exit(1)
+
         stdin, stdout, stderr = ssh.exec_command("python3 -m venv myenv")
         print(stdout.read().decode())
         print(stderr.read().decode())
@@ -69,6 +82,8 @@ def ssh_to_ec2(key_path, hostname, username="ubuntu"):
 
         command = "cat commands.txt | myenv/bin/python tgtgClass.py"
         ssh.exec_command(command)
+        print(stdout.read().decode())
+        print(stderr.read().decode())
         scp.close()
 
         
@@ -88,7 +103,14 @@ def ssh_to_ec2(key_path, hostname, username="ubuntu"):
             print("SSH connection closed.")
 
 # Your EC2 details
-KEY_PATH = "KeyForTesting.pem"
+if os.path.exists("KeyForTesting.pem"):
+
+    KEY_PATH = "KeyForTesting.pem"
+elif os.path.exists("src/KeyForTesting.pem"):
+    KEY_PATH = "src/KeyForTesting.pem"
+else:
+    print("KeyForTesting.pem not found")
+    sys.exit(1)
 HOSTNAME = "ec2-54-236-130-174.compute-1.amazonaws.com"
 USERNAME = "ubuntu"
 

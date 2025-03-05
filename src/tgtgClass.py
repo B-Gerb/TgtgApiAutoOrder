@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timezone, timedelta
 import time
 import requests
-
+import random
 # Class for commands to go through tgtg
 class tgtgTesting:
     def __init__(self):
@@ -73,7 +73,7 @@ class tgtgTesting:
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(1)
+                time.sleep(1 + random.uniform(0, .5))
                 firstSpeed -= 1
         secondSpeed = (duration * 60) - 600
         while secondSpeed > 0:
@@ -82,7 +82,7 @@ class tgtgTesting:
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(10)
+                time.sleep(10 + random.uniform(0, .5))
                 secondSpeed -= 10
         self.notifyUser("Failed to order " + name)
 
@@ -97,7 +97,7 @@ class tgtgTesting:
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(10)
+                time.sleep(10 + random.uniform(0, .5))
                 time -= 10
         self.notifyUser("Failed to order " + name)
 
@@ -110,15 +110,16 @@ class tgtgTesting:
     duration: the time in minutes you want to be notified for in minutes
     """
     def notifyWhenAvailable(self, listOfItems, duration):
-        duration = duration * 3600
+        duration = int(duration) * 3600
         while duration > 0:
             for item_id in listOfItems:
                 if self.checkAvailable(item_id):
+                    item = self.client.get_item(item_id)
                     self.notifyUser(f"Item at store: {item['display_name']} is available")
                     listOfItems.remove(item_id)
                     if len(listOfItems) == 0:
                         return
-            time.sleep(10)
+            time.sleep(10 + random.uniform(0, .5))
             duration -= 10
         names = ""
         for item_id in listOfItems:
@@ -148,29 +149,44 @@ def main():
         line = line.strip()
         process = line.split(":")[1]
         if process == "connection":
-            commands.createClient(parts[0], parts[1], parts[2])
+            try:
+                commands.createClient(parts[0], parts[1], parts[2])
+            except:
+                commands.notifyUser("Failed to connect")
             parts = []
-            time.sleep(1)
+            time.sleep(1 + random.uniform(0, .5))
         elif process == "abort":
-            commands.abortOrder(parts[0])
+            try:
+                commands.abortOrder(parts[0])
+            except:
+                commands.notifyUser("Failed to abort")
             parts = []
-            time.sleep(1)
+            time.sleep(1 + random.uniform(0, .5))
 
         elif process == "order":
-            commands.orderAnItem(parts[0], parts[1])
+            try:
+                commands.orderAnItem(parts[0], parts[1])
+            except:
+                commands.notifyUser("Failed to order")
             parts = []
-            time.sleep(1)
+            time.sleep(1 + random.uniform(0, .5))
 
         elif process == "notify":
             stores = parts[0].split(",")
-            commands.notifyWhenAvailable(stores, parts[1])
+            try:
+                commands.notifyWhenAvailable(stores, parts[1])
+            except:
+                commands.notifyUser("Failed to notify")
             parts = []
-            time.sleep(1)
+            time.sleep(1 + random.uniform(0, .5))
 
         elif process == "forceorder":
-            commands.forceOrder(parts[0], parts[1])
+            try:
+                commands.forceOrder(parts[0], parts[1])
+            except:
+                commands.notifyUser("Failed to force order")
             parts = []
-            time.sleep(1)
+            time.sleep(1 + random.uniform(0, .5))
 
         else:
             parts.append(process)

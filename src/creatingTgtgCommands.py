@@ -58,9 +58,8 @@ class tgtgCommands:
         writing.write(f"cookie:{cookie}\n")
         writing.write("type:connection\n")
         writing.close()
-        client = TgtgClient(access_token=access_token, refresh_token=refresh_token, cookie=cookie)
-        self.client = client
-        return client
+        self.client = TgtgClient(access_token=access_token, refresh_token=refresh_token, cookie=cookie)
+        return self.client
 
     #notify if a store is avaliable has option to order
     def creatingNotfication(self, orderOrNot=False):
@@ -74,9 +73,10 @@ class tgtgCommands:
             print(f"Option {currOrder}: {item['store']['store_name']}")
             currOrder += 1
         print("_"*50)
-        print("Type *all* to see all possible options or q to quit")
+        print("Type *all* to see all possible options or q to quit\n" + 
+            "Type each number seperated by a space to choose multiple options")
         while True:
-            userChoice = input("Which option would you like to be notified about" + (" and ordered?" if orderOrNot else "?"))
+            userChoice = input("Which options would you like to be notified about" + (" and ordered?" if orderOrNot else "?"))
 
             if userChoice == 'q':
                 return
@@ -95,7 +95,7 @@ class tgtgCommands:
                     print("Will notify you when the item is avaliable")
                     while True:
                         choice = input("Will check availability for how long in hours?")
-                        if not choice.isdigqit() or int(choice) < 0:
+                        if not choice.isdigit() or int(choice) < 0:
                             print("Invalid time")
                             continue
                         else:
@@ -104,6 +104,33 @@ class tgtgCommands:
                             writing.write("duration:" + str(duration) + "\n")
                             writing.write("type:" + ("forceOrder" if orderOrNot else "notify") + "\n")
                             return
+            else:
+                parts = userChoice.strip().split(" ")
+                for part in parts:
+                    if not part.isdigit() or int(part) not in possibleOrders:
+                        print("Invalid option")
+                        continue
+                print("stores choosen are: ")
+
+                for part in parts:
+                    print(f"{possibleOrders[int(part)]['store']['store_name']}")
+                if input("To Confirm these stores type y, to cancel type anything else:") != 'y':
+                    continue
+                choice = input("Will check availability for how long in hours?")
+                if not choice.isdigit() or int(choice) < 0:
+                    print("Invalid time")
+                    continue
+                else:
+                    duration = int(choice)
+                    allParts = "item_id:"
+                    for part in parts:
+                        allParts += possibleOrders[int(part)]['item']['item_id'] + ","
+                    allParts = allParts[:-1]
+                    writing.write(allParts + "\n")
+                    writing.write("duration:" + str(duration) + "\n")
+                    writing.write("type:" + ("forceOrder" if orderOrNot else "notify") + "\n")
+                    return
+
 
     def forceOrder(self):
         writing = open("commands.txt", "a")
@@ -232,6 +259,6 @@ def creatingCommands(notification=False, order=False, forceOrder=False):
 
 
 if __name__ == "__main__":
-    creatingCommands(order=True)
+    creatingCommands(notification=True)
 
     
