@@ -3,18 +3,35 @@
  * and registration.
  */
 
-export const STARTUP_COMMAND = {
-    name: 'startup',
-    description: 'Creates tokens for user',
+
+export const REGISTER = {
+    name: 'register',
+    description: 'will get email and password from user and create a tokens for user',
+}
+export const DELETE = {
+    name: 'delete',
+    description: 'Deletes tokens for user',
+}
+export const NOTIFY = {
+    name: 'notify',
+    description: 'Will notify user about the status of too good to go stores',
+}
+export const FORCEORDER = {
+    name: 'forceorder',
+    description: 'Will force order for user',
+}
+export const ORDER = {
+    name: 'order',
+    description: 'Will order for user',
+}
+export const CANCELORDER = {
+    name  : 'cancelorder',
+    description: 'Will cancel order for user',
+}
+export const GETORDERS = {
+    name: 'getorders',
+    description: 'Will get all orders for user',
 }
 
 
-export const AWW_COMMAND = {
-  name: 'awwww',
-  description: 'Drop some cuteness on this channel.',
-};
 
-export const INVITE_COMMAND = {
-  name: 'invite',
-  description: 'Get an invite link to add the bot to your server',
-};

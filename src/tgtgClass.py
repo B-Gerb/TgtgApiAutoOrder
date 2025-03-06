@@ -27,6 +27,8 @@ class tgtgTesting:
         process = requests.post(self.url, json=data)
         return process
     # Check if an item is available one time
+    def createTime(self, lower, higher):
+        return random.uniform(lower, higher)
     def checkAvailable(self, item_id):
         item = self.client.get_item(item_id)
         return item['items_available'] > 0
@@ -65,7 +67,10 @@ class tgtgTesting:
         time_to_wait = (target_date - now).total_seconds()
         time_to_wait = float(time_to_wait)
         time.sleep(time_to_wait - 3)
-        duration += 3
+        if duration.isdigit():
+            duration = int(duration)
+        else:
+            duration += 10
         firstSpeed = 600
         while firstSpeed > 0:
             order = self.attemptToOrder(item_id, 1)  # Assuming amt=1
@@ -73,8 +78,9 @@ class tgtgTesting:
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(1 + random.uniform(0, .5))
-                firstSpeed -= 1
+                sleepTime = self.createTime(1, 5)
+                time.sleep(sleepTime)
+                firstSpeed -= sleepTime
         secondSpeed = (duration * 60) - 600
         while secondSpeed > 0:
             order = self.attemptToOrder(item['item']['item_id'], 1)  # Assuming amt=1
@@ -82,23 +88,29 @@ class tgtgTesting:
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(10 + random.uniform(0, .5))
-                secondSpeed -= 10
+                sleepTime = self.createTime(20,61)
+                time.sleep(sleepTime)
+                secondSpeed -= sleepTime
         self.notifyUser("Failed to order " + name)
 
     # Force order an item even if it does not have any available pickup window
     def forceOrder(self, item_id, duration, amt=1):  # Assuming amt=1
         item = self.client.get_item(item_id)
         name = item['item']['display_name']
-        time = duration * 3600
-        while time > 0:
+        if duration.isdigit():
+            duration = int(duration)
+        else:
+            duration = 10
+        waitTime = duration * 3600
+        while waitTime > 0:
             order = self.attemptToOrder(item_id, amt)
             if order != "Failed to order":
                 self.notifyUser("Successful order of " + name)
                 return
             else:
-                time.sleep(10 + random.uniform(0, .5))
-                time -= 10
+                sleepTime = self.createTime(20,61)
+                time.sleep(sleepTime)
+                waitTime -= sleepTime
         self.notifyUser("Failed to order " + name)
 
 
@@ -110,8 +122,12 @@ class tgtgTesting:
     duration: the time in minutes you want to be notified for in minutes
     """
     def notifyWhenAvailable(self, listOfItems, duration):
-        duration = int(duration) * 3600
-        while duration > 0:
+        if duration.isdigit():
+            duration = int(duration)
+        else:
+            duration = 10
+        waitTime = int(duration) * 3600
+        while waitTime > 0:
             for item_id in listOfItems:
                 if self.checkAvailable(item_id):
                     item = self.client.get_item(item_id)
@@ -119,8 +135,9 @@ class tgtgTesting:
                     listOfItems.remove(item_id)
                     if len(listOfItems) == 0:
                         return
-            time.sleep(10 + random.uniform(0, .5))
-            duration -= 10
+            sleepTime = self.createTime(20,61)
+            time.sleep(sleepTime)
+            waitTime -= sleepTime
         names = ""
         for item_id in listOfItems:
             item = self.client.get_item(item_id)
@@ -175,8 +192,8 @@ def main():
             stores = parts[0].split(",")
             try:
                 commands.notifyWhenAvailable(stores, parts[1])
-            except:
-                commands.notifyUser("Failed to notify")
+            except Exception as error:
+                commands.notifyUser(f"Failed to notify {error}")
             parts = []
             time.sleep(1 + random.uniform(0, .5))
 
