@@ -120,6 +120,7 @@ class tgtgTesting:
     """
     item_id: listOfItems
     duration: the time in minutes you want to be notified for in minutes
+    listOfItems: is a set of item_ids a user wants to be notified about
     """
     def notifyWhenAvailable(self, listOfItems, duration):
         if duration.isdigit():
@@ -127,20 +128,22 @@ class tgtgTesting:
         else:
             duration = 10
         waitTime = int(duration) * 3600
+        listOfItems = set(listOfItems)
         while waitTime > 0:
-            for item_id in listOfItems:
-                if self.checkAvailable(item_id):
-                    item = self.client.get_item(item_id)
-                    self.notifyUser(f"Item at store: {item['display_name']} is available")
-                    listOfItems.remove(item_id)
-                    if len(listOfItems) == 0:
-                        return
+            items = self.client.get_favorites()
+            for item in items:
+                if item['item']['item_id'] in listOfItems:
+                    if item['items_available'] > 0:
+                        self.notifyUser(f"Item at store: {item['display_name']} is available")
+                        listOfItems.remove(item['item']['item_id'])
+                        if len(listOfItems) == 0:
+                            return
             sleepTime = self.createTime(20,61)
             time.sleep(sleepTime)
             waitTime -= sleepTime
         names = ""
         for item_id in listOfItems:
-            item = self.client.get_item(item_id)
+            item = items[item_id]
             names += item['display_name'] + ", "
         names = names[:-2]
 
@@ -191,7 +194,7 @@ def main():
         elif process == "notify":
             stores = parts[0].split(",")
             try:
-                commands.notifyWhenAvailable(stores, parts[1])
+                commands.notifyWhenAvailable(set(stores), parts[1])
             except Exception as error:
                 commands.notifyUser(f"Failed to notify {error}")
             parts = []

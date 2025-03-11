@@ -2,11 +2,19 @@
  * Share command metadata from a common spot to be used for both runtime
  * and registration.
  */
-
+//CONTAINS REGISTER LOGIN LOGOUT DELETE NOTIFY FORCEORDER ORDER CANCELORDER GETORDERS
 
 export const REGISTER = {
     name: 'register',
     description: 'will get email and password from user and create a tokens for user',
+}
+export const LOGIN = {
+    name: 'login',
+    description: 'will allow user to login to an account based on discord uid',
+}
+export const LOGOUT = {
+    name: 'logout',
+    description: 'will logout user from account',
 }
 export const DELETE = {
     name: 'delete',

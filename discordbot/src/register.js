@@ -1,5 +1,5 @@
-import { REGISTER, DELETE,
-    NOTIFY, FORCEORDER, ORDER, CANCELORDER, GETORDERS } from './commands.js';import dotenv from 'dotenv';
+import { REGISTER, LOGIN, LOGOUT, DELETE, NOTIFY, FORCEORDER, ORDER, CANCELORDER, GETORDERS } from './commands.js';
+import dotenv from 'dotenv';
 import process from 'node:process';
 
 /**
@@ -34,7 +34,7 @@ const response = await fetch(url, {
     Authorization: `Bot ${token}`,
   },
   method: 'PUT',
-  body: JSON.stringify(['REGISTER', 'DELETE', 'NOTIFY', 'FORCEORDER', 'ORDER', 'CANCELORDER', 'GETORDERS']),
+  body: JSON.stringify([REGISTER, LOGIN, LOGOUT, DELETE, NOTIFY, FORCEORDER, ORDER, CANCELORDER, GETORDERS]),
 });
 
 if (response.ok) {

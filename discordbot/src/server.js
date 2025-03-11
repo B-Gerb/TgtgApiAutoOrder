@@ -4,8 +4,8 @@ import {
   InteractionType,
   verifyKey,
 } from 'discord-interactions';
-import { AWW_COMMAND, INVITE_COMMAND } from './commands.js';
 import { InteractionResponseFlags } from 'discord-interactions';
+import { REGISTER, LOGIN, LOGOUT, DELETE, NOTIFY, FORCEORDER, ORDER, CANCELORDER, GETORDERS } from './commands.js';
 
 class JsonResponse extends Response {
   constructor(body, init) {
@@ -101,14 +101,86 @@ router.post('/', async (request, env) => {
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
     switch (interaction.data.name.toLowerCase()) {
-      default:
-        return new JsonResponse({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            content: 'not implemeneted',
-            flags: InteractionResponseFlags.EPHEMERAL,
-          },
-        });
+        case REGISTER.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: REGISTER.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case LOGIN.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: LOGIN.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case LOGOUT.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: LOGOUT.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case DELETE.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: DELETE.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case NOTIFY.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: NOTIFY.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case FORCEORDER.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: FORCEORDER.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case ORDER.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: ORDER.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case CANCELORDER.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: CANCELORDER.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        case GETORDERS.name.toLowerCase():
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: GETORDERS.description,
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
+        default:
+            return new JsonResponse({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'not implemeneted',
+                flags: InteractionResponseFlags.EPHEMERAL,
+            },
+            });
     }
   }
 
