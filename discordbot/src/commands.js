@@ -2,7 +2,7 @@
  * Share command metadata from a common spot to be used for both runtime
  * and registration.
  */
-//CONTAINS REGISTER LOGIN LOGOUT DELETE NOTIFY FORCEORDER ORDER CANCELORDER GETORDERS
+//CONTAINS REGISTER, LOGIN, LOGOUT, DELETE, NOTIFY, FORCEORDER, ORDER, CANCELORDER, GETORDERS
 
 export const REGISTER = {
     name: 'register',

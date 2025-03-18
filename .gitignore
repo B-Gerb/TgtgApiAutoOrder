@@ -1,7 +1,10 @@
 #Information currently locally stored (not super safe)
 tokens.txt
-#Key to connect to aws
+#Key to connect to aws 
 KeyForTesting.pem
+
+#Key to connect to microsoft azure
+TGTG_key.pem
 
 #testing the command creation
 commands.txt

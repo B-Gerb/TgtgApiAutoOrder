@@ -108,7 +108,7 @@ router.post('/', async (request, env) => {
                 content: REGISTER.description,
                 flags: InteractionResponseFlags.EPHEMERAL,
             },
-            });
+            }); 
         case LOGIN.name.toLowerCase():
             return new JsonResponse({
             type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
