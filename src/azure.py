@@ -15,10 +15,19 @@ def startUPSSH(key_path, hostname, username="azureuser"):
         ssh.connect(
             hostname=hostname,
             username=username,
-            pkey=private_key
+            pkey=private_key    
         )
         
-        stdin, stdout, stderr = ssh.exec_command("sudo apt update && sudo apt install -y python3-requests")
+        stdin, stdout, stderr = ssh.exec_command("sudo apt update && sudo apt install -y python3-requests python3-flask python3-venv")
+        scp = SCPClient(ssh.get_transport())
+        if os.path.exists("creatingCommandsOffsite.py"):
+            scp.put("creatingCommandsOffsite.py")
+        elif os.path.exists("src/creatingCommandsOffsite.py"):
+            scp.put("src/creatingCommandsOffsite.py")
+        else:
+            print("creatingCommandsOffsite.py not found")
+            sys.exit(1)
+        scp.close()
         print(stdout.read().decode())
         print(stderr.read().decode())
         ssh.close()
@@ -112,5 +121,5 @@ else:
 HOSTNAME = "20.84.48.177"
 USERNAME = "azureuser"
 
-#startUPSSH(KEY_PATH, HOSTNAME, USERNAME)
-ssh_to_azure(KEY_PATH, HOSTNAME, USERNAME)
+startUPSSH(KEY_PATH, HOSTNAME, USERNAME)
+#ssh_to_azure(KEY_PATH, HOSTNAME, USERNAME)
