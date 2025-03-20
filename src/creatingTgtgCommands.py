@@ -10,7 +10,7 @@ CODE WILL CREATE TOKENS.TXT FILE TO STORE CREDENTIALS
 WILL TAKE USER INPUT TO EITHER 
 1. ORDER FROM STORE
 2. GET NOTIFCIATIONS FROM A STORE
-
+LOCAL
 """
 class tgtgCommands:
 
@@ -27,7 +27,7 @@ class tgtgCommands:
             os.remove(self.commands_path)
             
         if emailToUse == "skip":
-            return self.create_client()
+            return self.createClient()
         
         try:
             client = TgtgClient(email=emailToUse)
@@ -38,6 +38,7 @@ class tgtgCommands:
                     writing.write(f"{credentials['access_token']}\n")
                     writing.write(f"{credentials['refresh_token']}\n")
                     writing.write(f"{credentials['cookie']}\n")
+                    writing.write(f"{emailToUse}\n")
             self.client = client
             return self.createClient()
         except Exception as e:

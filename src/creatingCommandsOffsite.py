@@ -7,6 +7,7 @@ import os
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+created_clients = {}
 
 
 
@@ -50,6 +51,15 @@ def create_client():
     response = handler.create_new_client(email)
     return jsonify({"response": response})
 
+@app.route('/delete', methods=['POST'])
+def delete_client():
+    data = request.json
+    email = data.get('email')
+    if email in created_clients:
+        del created_clients[email]
+        return jsonify({"response": "Deleted"})
+    else:
+        return jsonify({"response: Not found"}), 
 
 @app.route('/possible_stores', methods=['GET'])
 def possible_stores():
