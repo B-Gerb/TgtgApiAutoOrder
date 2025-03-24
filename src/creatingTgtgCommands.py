@@ -228,9 +228,8 @@ class tgtgCommands:
         
         for item in items:
             try:
-                item_details = self.client.get_item(item['item']['item_id'])
-                possible_orders[curr_order] = item_details
-                print(f"Option {curr_order}: {item_details['store']['store_name']}")
+                possible_orders[curr_order] = item
+                print(f"Option {curr_order}: {item['store']['store_name']}")
                 curr_order += 1
             except Exception as e:
                 print(f"Error getting item details: {e}")
@@ -265,6 +264,6 @@ def creatingCommands(notification=False, order=False, forceOrder=False):
 
 
 if __name__ == "__main__":
-    creatingCommands(notification=True)
+    creatingCommands(order=True)
 
     

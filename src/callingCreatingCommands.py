@@ -148,17 +148,17 @@ class TgtgServerClient:
 
     def display_available_options(self, stores):
         """Display available options from the list of stores"""
-        if not stores or "stores" not in stores:
-            print("No stores available")
+        if not stores or not 'stores' in stores:
+            print("No stores available!!!")
             return {}
             
         possible_orders = {}
         curr_order = 1
         
-        for store in stores["stores"]:
+        for store in stores['stores']:
             try:
-                store_name = store.get("store_name", "Unknown Store")
-                store_id = store.get("item_id", "Unknown ID")
+                store_name = store.get('display_name', "Unknown Name")
+                store_id = store.get('item', {}).get('item_id', "Unknown ID")
                 if store_id == "Unknown ID":
                     continue
                 possible_orders[curr_order] = {"item_id": store_id, "store_name": store_name}

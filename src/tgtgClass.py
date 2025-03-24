@@ -12,6 +12,9 @@ class tgtgTesting:
         self.channelID = None
         self.url ="https://tgtgggbot.high5brian.workers.dev/notification"
 
+    def setClient(self, client):
+        self.client = client   
+
     
     def setChannelId(self, channelID):
         self.channelID = channelID
@@ -130,7 +133,11 @@ class tgtgTesting:
         waitTime = int(duration) * 3600
         listOfItems = set(listOfItems)
         while waitTime > 0:
-            items = self.client.get_favorites()
+            try:
+                items = self.client.get_favorites()
+            except:
+                self.notifyUser("Failed to get favorites")
+                return
             for item in items:
                 if item['item']['item_id'] in listOfItems:
                     if item['items_available'] > 0:
@@ -156,63 +163,3 @@ class tgtgTesting:
         self.notifyUser(f"Order for {order_id} has been aborted")
 
 
-# Main function to handle command-line input
-def main():
-    commands = tgtgTesting()
-    lines = sys.stdin.readlines()
-    channelID = lines[0].strip()
-    channelID = channelID.split(":")[1]
-    commands.setChannelId(channelID)
-    lines = lines[1:]
-    parts = []
-    for line in lines:
-        line = line.strip()
-        process = line.split(":")[1]
-        if process == "connection":
-            try:
-                commands.createClient(parts[0], parts[1], parts[2])
-            except:
-                commands.notifyUser("Failed to connect")
-            parts = []
-            time.sleep(1 + random.uniform(0, .5))
-        elif process == "abort":
-            try:
-                commands.abortOrder(parts[0])
-            except:
-                commands.notifyUser("Failed to abort")
-            parts = []
-            time.sleep(1 + random.uniform(0, .5))
-
-        elif process == "order":
-            try:
-                commands.orderAnItem(parts[0], parts[1])
-            except:
-                commands.notifyUser("Failed to order")
-            parts = []
-            time.sleep(1 + random.uniform(0, .5))
-
-        elif process == "notify":
-            stores = parts[0].split(",")
-            try:
-                commands.notifyWhenAvailable(set(stores), parts[1])
-            except Exception as error:
-                commands.notifyUser(f"Failed to notify {error}")
-            parts = []
-            time.sleep(1 + random.uniform(0, .5))
-
-        elif process == "forceorder":
-            try:
-                commands.forceOrder(parts[0], parts[1])
-            except:
-                commands.notifyUser("Failed to force order")
-            parts = []
-            time.sleep(1 + random.uniform(0, .5))
-
-        else:
-            parts.append(process)
-
-
-if __name__ == "__main__":
-
-
-    main()
