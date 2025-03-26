@@ -21,7 +21,9 @@ def executeCommand(filePath):
         key, value = line.split(":")
         data[key] = value
 
-    requests.post(f"{AZURE_SERVER}/execute_command", json=data)
+    requests.post(f"{AZURE_SERVER}/execute_command", json=data, timeout=5)
+    print("Command executed")
+    return
 
 
 executeCommand('commands.txt')
