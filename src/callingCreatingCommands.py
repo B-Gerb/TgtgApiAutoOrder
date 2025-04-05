@@ -5,6 +5,8 @@ import sys
 from datetime import datetime, timezone
 
 AZURE_SERVER = "http://20.84.48.177:5000"
+AWS_SERVER = "http://54.242.239.216:5000"
+
 class TgtgServerClient:
     def __init__(self, user_timezone=timezone.utc):
         self.timezone = user_timezone
@@ -14,6 +16,10 @@ class TgtgServerClient:
         self.refresh_token = None
         self.cookie = None
         self.email = None
+        self.server = None
+
+    def set_server(self, server):
+        self.server = server
 
     def startup(self, email):
         if os.path.exists(self.commands_path):
@@ -92,14 +98,20 @@ class TgtgServerClient:
         data = {
             "email": email
         }
+        if not self.server:
+            print("Server not set")
+            return None
         try:
-            response = requests.post(f"{AZURE_SERVER}/new_tokens", json=data)
+            response = requests.post(f"{self.server}/new_tokens", json=data)
             return response.json()
         except Exception as e:
             print(f"Error connecting to server: {e}")
             sys.exit(1)
 
     def get_stores(self):
+        if not self.server:
+            print("Server not set")
+            return None
         if not self.access_token or not self.refresh_token or not self.cookie:
             print("Client not initialized properly")
             return None
@@ -111,7 +123,7 @@ class TgtgServerClient:
         }
         try:
             print("attempting to get stores")
-            response = requests.get(f"{AZURE_SERVER}/possible_stores", json=data)
+            response = requests.get(f"{self.server}/possible_stores", json=data)
             return response.json()
         except Exception as e:
             print(f"Error getting stores: {e}")
@@ -181,7 +193,11 @@ class TgtgServerClient:
 
 
             
-def create_commands(notification=False, order=False, force_order=False):
+def create_commands(server=None, notification=False, order=False, force_order=False):
+    if server is None:
+        print("Server not specified")
+        return
+    
 
     amountOfTrue = 0
     if notification:
@@ -194,6 +210,7 @@ def create_commands(notification=False, order=False, force_order=False):
         print("Can only have one type of action")
         return
     client = TgtgServerClient()
+    client.set_server(server)  
     email = input("Enter your email or type skip if tokens.txt already contains keys: ")
     
     if not client.startup(email):
@@ -295,5 +312,14 @@ def create_commands(notification=False, order=False, force_order=False):
             
 
 if __name__ == "__main__":
-    create_commands(notification=True)
+    inputOption = input("Do you want to execute through aws or azure? (aws/azure): ")
+    if inputOption == "aws":
+        server = AWS_SERVER
+    elif inputOption == "azure":
+        server = AZURE_SERVER
+    else:
+        print("Invalid option")
+        sys.exit(1)
+
+    create_commands(notification=True, server=server)
 

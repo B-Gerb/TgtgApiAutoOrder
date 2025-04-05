@@ -12,24 +12,38 @@ def startUPSSH(key_path, hostname, username="ubuntu"):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         private_key = paramiko.RSAKey.from_private_key_file(key_path)
-
-
         ssh.connect(
             hostname=hostname,
             username=username,
-            pkey=private_key
+            pkey=private_key    
         )
-
-
-
-        stdin, stdout, stderr = ssh.exec_command("sudo apt install python3-requests")
-
+        
+        stdin, stdout, stderr = ssh.exec_command("sudo apt update && sudo apt install -y python3-requests python3-flask python3-venv")
+        scp = SCPClient(ssh.get_transport())
+        ssh.exec_command("rm -rf creatingCommandsOffsite.py")
+        ssh.exec_command("rm -rf tgtgClass.py")
+        ssh.exec_command("rm -rf commands.txt")
+        if os.path.exists("creatingCommandsOffsite.py"):
+            scp.put("creatingCommandsOffsite.py")
+        elif os.path.exists("src/creatingCommandsOffsite.py"):
+            scp.put("src/creatingCommandsOffsite.py")
+        else:
+            print("creatingCommandsOffsite.py not found")
+            sys.exit(1)
+        
+        if os.path.exists("tgtgClass.py"):
+            scp.put("tgtgClass.py")
+        elif os.path.exists("src/tgtgClass.py"):
+            scp.put("src/tgtgClass.py")
+        else:
+            print("tgtgClass.py not found")
+            sys.exit(1)
+        scp.close()
         print(stdout.read().decode())
-        print(stderr.read().decode()) 
+        print(stderr.read().decode())
         ssh.close()
-
-    except:
-        print("Failed to install tgtg")
+    except Exception as e:
+        print(f"Failed to install tgtg: {e}")
         return False
 
     
@@ -111,8 +125,8 @@ elif os.path.exists("src/KeyForTesting.pem"):
 else:
     print("KeyForTesting.pem not found")
     sys.exit(1)
-HOSTNAME = "ec2-52-86-235-113.compute-1.amazonaws.com"
+HOSTNAME = "ec2-54-227-69-180.compute-1.amazonaws.com"
 USERNAME = "ubuntu"
 
-#startUPSSH(KEY_PATH, HOSTNAME, USERNAME)
-ssh_to_ec2(KEY_PATH, HOSTNAME, USERNAME)
+startUPSSH(KEY_PATH, HOSTNAME, USERNAME)
+#ssh_to_ec2(KEY_PATH, HOSTNAME, USERNAME)
