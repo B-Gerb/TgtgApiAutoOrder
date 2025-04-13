@@ -162,10 +162,16 @@ class tgtgCommands:
             possibleOrders = {}
             currOrder = 1
             for item in items:
-                if 'pickup_interval' not in item or 'next_sales_window_purchase_start' not in item:
+                item = self.client.get_item(item['item']['item_id'])
+                time.sleep(1)
+                if'next_sales_window_purchase_start' not in item:
                     continue 
-                startInt = datetime.strptime(item['pickup_interval']['start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
-                endInt = datetime.strptime(item['pickup_interval']['end'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
+                if 'pickup_interval' not in item:
+                    startInt = "No Pickup Interval given"
+                    endInt = "No Pickup Interval given"
+                else: 
+                    startInt = datetime.strptime(item['pickup_interval']['start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
+                    endInt = datetime.strptime(item['pickup_interval']['end'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
                 salesWindow = datetime.strptime(item['next_sales_window_purchase_start'], "%Y-%m-%dT%H:%M:%SZ").astimezone(self.timezone)
                 print(f"Option {currOrder} at store: {item['store']['store_name']} \n" +
                     f"Start time: {startInt}, end time: {endInt} ")
@@ -199,13 +205,13 @@ class tgtgCommands:
                             continue
                         print("How long would you like to attempt the order?")
                         print("Duration will be after the next sales window")
-                        while (time := input("Duration in minutes: ")):
-                            if not time.isdigit():
+                        while (durationTime := input("Duration in minutes: ")):
+                            if not durationTime.isdigit():
                                 print("Invalid time")
                                 continue
-                            time = int(time)
-                            if time < 0:
-                                print("Invalid time")
+                            durationTime = int(durationTime)
+                            if durationTime < 0:
+                                print("Invalid time'")
                                 continue
                             break
                     break
@@ -255,6 +261,7 @@ def creatingCommands(notification=False, order=False, forceOrder=False):
     setUp = tgtgCommands()
     client = setUp.startUp(input("Enter your email or type skip of tokens.txt already contains keys: ")) 
 
+
     if order:
         setUp.orderAnItem()
     if notification:
@@ -264,6 +271,6 @@ def creatingCommands(notification=False, order=False, forceOrder=False):
 
 
 if __name__ == "__main__":
-    creatingCommands(order=True)
+    creatingCommands(notification=True)
 
     
