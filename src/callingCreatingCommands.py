@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 AZURE_SERVER = "http://20.84.48.177:5000"
 AWS_SERVER = "http://54.242.239.216:5000"
+HOME_SERVER = "http://127.0.0.1:5000"
 
 class TgtgServerClient:
     def __init__(self, user_timezone=timezone.utc):
@@ -312,11 +313,13 @@ def create_commands(server=None, notification=False, order=False, force_order=Fa
             
 
 if __name__ == "__main__":
-    inputOption = input("Do you want to execute through aws or azure? (aws/azure): ")
+    inputOption = input("Do you want to execute through aws, azure, or home? (aws/azure/home): ")
     if inputOption == "aws":
         server = AWS_SERVER
     elif inputOption == "azure":
         server = AZURE_SERVER
+    elif inputOption == "home":
+        server = HOME_SERVER
     else:
         print("Invalid option")
         sys.exit(1)

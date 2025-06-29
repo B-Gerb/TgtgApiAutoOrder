@@ -8,3 +8,7 @@ TGTG_key.pem
 
 #testing the command creation
 commands.txt
+
+#venv
+venv/
+src/newServer/
